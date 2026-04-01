@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail
 } from "firebase/auth"
+import Timetable from './Timetable'
 
 // ─── Helpers ───────────────────────────────────────────
 function formatDate(dateStr) {
@@ -33,6 +34,7 @@ const defaultState = {
   theory: { conducted: '', attended: '' },
   practical: { conducted: '', attended: '' },
   mentoring: { conducted: '', attended: '' },
+  timetable: { timetable_grid: {} } // Updated to handle grid object
 }
 
 // ─── App ───────────────────────────────────────────────
@@ -43,6 +45,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showTimetable, setShowTimetable] = useState(false);
 
   // Data State
   const [data, setData] = useState({ ...defaultState })
@@ -123,6 +126,17 @@ export default function App() {
     }))
   }, [])
 
+  // UPDATED TIMETABLE HANDLER FOR GRID
+  const updateTimetable = (field, value) => {
+    setData(prev => ({
+      ...prev,
+      timetable: {
+        ...prev.timetable,
+        [field]: value
+      }
+    }));
+  };
+
   const getNum = (val) => (val === '' || val === undefined) ? 0 : Number(val)
 
   if (loading) {
@@ -151,19 +165,19 @@ export default function App() {
 
           {authMode === 'login' && (
             <div style={{ textAlign: 'right', marginTop: '-10px' }}>
-              <button type="button" onClick={handleForgotPassword} style={{ background: 'none', border: 'none', color: 'var(--accent-purple)', fontSize: '0.75rem', cursor: 'pointer', padding: '0' }}>
+              <button type="button" onClick={handleForgotPassword} style={{ background: 'none', border: 'none', color: '#7c5cfc', fontSize: '0.75rem', cursor: 'pointer', padding: '0' }}>
                 Forgot Password?
               </button>
             </div>
           )}
 
-          <button type="submit" className="category-card" style={{ background: 'var(--gradient-purple)', color: 'white', fontWeight: 'bold', cursor: 'pointer', border: 'none', padding: '15px' }}>
+          <button type="submit" className="category-card" style={{ background: 'linear-gradient(135deg, #7c5cfc 0%, #a78bfa 100%)', color: 'white', fontWeight: 'bold', cursor: 'pointer', border: 'none', padding: '15px' }}>
             {authMode === 'login' ? 'Sign In' : 'Register Now'}
           </button>
 
-          <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#8888a0' }}>
             {authMode === 'login' ? "New here? " : "Already have an account? "}
-            <span style={{ color: 'var(--accent-purple)', cursor: 'pointer', fontWeight: '600' }} onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}>
+            <span style={{ color: '#7c5cfc', cursor: 'pointer', fontWeight: '600' }} onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}>
               {authMode === 'login' ? 'Create an account' : 'Sign in instead'}
             </span>
           </p>
@@ -192,8 +206,15 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-        <button onClick={() => signOut(auth)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', borderRadius: '6px', fontSize: '0.75rem', padding: '6px 12px', cursor: 'pointer' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <button
+          onClick={() => setShowTimetable(true)}
+          style={{ background: 'linear-gradient(135deg, #7c5cfc 0%, #a78bfa 100%)', border: 'none', color: 'white', borderRadius: '6px', fontSize: '0.75rem', padding: '8px 16px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          📅 View Timetable
+        </button>
+
+        <button onClick={() => signOut(auth)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)', color: '#8888a0', borderRadius: '6px', fontSize: '0.75rem', padding: '6px 12px', cursor: 'pointer' }}>
           Logout: {user.email.split('@')[0]}
         </button>
       </div>
@@ -289,6 +310,14 @@ export default function App() {
         <p className="footer__text">Connected to Google Cloud Firestore</p>
         <p className={`footer__saved ${saved ? 'footer__saved--visible' : ''}`}>✓ Saved Securely</p>
       </footer>
+
+      {showTimetable && (
+        <Timetable
+          timetable={data.timetable}
+          onUpdate={updateTimetable}
+          onClose={() => setShowTimetable(false)}
+        />
+      )}
     </div>
   )
 }
