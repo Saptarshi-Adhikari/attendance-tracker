@@ -319,13 +319,19 @@ body::before {
   outline: none;
   transition: var(--transition);
   width: 100%;
-  -moz-appearance: textfield;
 }
 
+/* FIXED: Restored and styled number input arrows for dark mode */
 .input-group__field::-webkit-inner-spin-button,
 .input-group__field::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: var(--transition);
+}
+
+.input-group__field:hover::-webkit-inner-spin-button {
+  opacity: 1;
 }
 
 .input-group__field:focus {

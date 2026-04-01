@@ -1,20 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { db } from './firebase' 
+import { doc, onSnapshot, setDoc } from "firebase/firestore"
 
 // ─── Helpers ───────────────────────────────────────────
-const STORAGE_KEY = 'attendance-tracker-data'
-
-function loadData() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch { /* ignore */ }
-  return null
-}
-
-function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-}
-
 function formatDate(dateStr) {
   if (!dateStr) return '—'
   const d = new Date(dateStr + 'T00:00:00')
@@ -43,26 +31,44 @@ const defaultState = {
 
 // ─── App ───────────────────────────────────────────────
 export default function App() {
-  const [data, setData] = useState(() => {
-    const saved = loadData()
-    return saved || { ...defaultState }
-  })
+  const [data, setData] = useState({ ...defaultState })
   const [saved, setSaved] = useState(false)
 
-  // Persist every change
+  // Document reference in Firestore
+  const docRef = doc(db, "trackers", "user-attendance-123");
+
+  // 1. LISTEN to Firebase in real-time
   useEffect(() => {
-    saveData(data)
-    setSaved(true)
-    const timer = setTimeout(() => setSaved(false), 1500)
-    return () => clearTimeout(timer)
-  }, [data])
+    const unsub = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setData(docSnap.data())
+      }
+    });
+    return () => unsub(); 
+  }, []);
+
+  // 2. SAVE to Firebase with a debounce
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        // Only save if data is different from default to avoid empty writes on first load
+        await setDoc(docRef, data);
+        setSaved(true)
+        const timer = setTimeout(() => setSaved(false), 1500)
+        return () => clearTimeout(timer)
+      } catch (error) {
+        console.error("Error saving to Firebase:", error);
+      }
+    }, 800); 
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [data]);
 
   const updateDate = useCallback((field, value) => {
     setData(prev => ({ ...prev, [field]: value }))
   }, [])
 
   const updateCategory = useCallback((category, field, value) => {
-    // Allow empty string so user can clear the field
     const numVal = value === '' ? '' : Math.max(0, parseInt(value) || 0)
     setData(prev => ({
       ...prev,
@@ -84,7 +90,6 @@ export default function App() {
   const overallStatus = getStatusInfo(overallPercent)
   const dateRange = `${formatDate(data.startDate)} – ${formatDate(data.endDate)}`
 
-  // ─── Category Config ──────────────────────────────────
   const categories = [
     { key: 'theory', title: 'Theory Classes', icon: '📖', percent: theoryPercent },
     { key: 'practical', title: 'Practical / Lab', icon: '🧪', percent: practicalPercent },
@@ -93,14 +98,12 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Header */}
       <header className="header">
         <div className="header__icon">📊</div>
         <h1 className="header__title">Attendance Tracker</h1>
         <p className="header__subtitle">Track your attendance across all categories</p>
       </header>
 
-      {/* Date Range Picker */}
       <section className="date-range" id="date-range-section">
         <span className="date-range__label">From</span>
         <input
@@ -121,10 +124,9 @@ export default function App() {
         />
       </section>
 
-      {/* Category Cards */}
       <div className="cards-grid">
         {categories.map(cat => {
-          const catData = data[cat.key]
+          const catData = data[cat.key] || { conducted: '', attended: '' };
           const statusInfo = getStatusInfo(cat.percent)
           return (
             <div
@@ -176,7 +178,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Progress Bar */}
               <div className="progress-bar">
                 <div
                   className="progress-bar__fill"
@@ -184,7 +185,6 @@ export default function App() {
                 />
               </div>
 
-              {/* Status Badge */}
               {(getNum(catData.conducted) > 0) && (
                 <div className="overall-card__header" style={{ textAlign: 'left', marginBottom: 0, marginTop: '12px' }}>
                   <span className={`status-badge status-badge--${statusInfo.status}`}>
@@ -198,7 +198,6 @@ export default function App() {
         })}
       </div>
 
-      {/* Overall Summary Card */}
       <div className="overall-card" id="overall-summary">
         <div className="overall-card__header">
           <div className="overall-card__label">Overall Attendance</div>
@@ -229,11 +228,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="footer">
-        <p className="footer__text">Data saved locally in your browser</p>
+        <p className="footer__text">Data synced with Firebase Cloud</p>
         <p className={`footer__saved ${saved ? 'footer__saved--visible' : ''}`}>
-          ✓ Saved
+          ✓ Saved to Cloud
         </p>
       </footer>
     </div>
