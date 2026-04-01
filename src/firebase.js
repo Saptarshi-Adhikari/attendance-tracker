@@ -1,8 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth"; // Added Auth import
 import { getAnalytics } from "firebase/analytics";
 
-// Your new web app's Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDNFdng0rdwPnMvFOifmv_f5jgVVinpDJo",
     authDomain: "attendance-tracker-569b0.firebaseapp.com",
@@ -13,9 +13,8 @@ const firebaseConfig = {
     measurementId: "G-CB5ZC6EL5C"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
-// Export the database instance for App.jsx
 export const db = getFirestore(app);
+export const auth = getAuth(app); // Added Auth export
