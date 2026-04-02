@@ -1,3 +1,5 @@
+
+import { setPersistence, browserLocalPersistence } from "firebase/auth";
 import { useState, useEffect, useCallback } from 'react'
 import { db, auth } from './firebase'
 import { doc, onSnapshot, setDoc } from "firebase/firestore"
@@ -50,6 +52,17 @@ export default function App() {
   // Data State
   const [data, setData] = useState({ ...defaultState })
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    // This line ensures the session stays active even when using home screen shortcuts
+    setPersistence(auth, browserLocalPersistence);
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {

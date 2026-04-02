@@ -6,6 +6,21 @@ const TIMES = [
     '1:10', '2:00', '2:50', '3:40', '4:30', '5:20'
 ];
 
+// Define your 10 dropdown options
+const OPTIONS = [
+    "Chem.-1",
+    "ENG",
+    "Mentoring",
+    "Library",
+    "Break",
+    "AutoCAD",
+    "Lang Lab",
+    "Maths",
+    "Pps Lab",
+    "Pps",
+    "Others"
+];
+
 export default function Timetable({ timetable, onUpdate, onClose }) {
 
     const handleCellChange = (day, time, value) => {
@@ -20,7 +35,7 @@ export default function Timetable({ timetable, onUpdate, onClose }) {
                 <div className="timetable-header">
                     <div className="header-info">
                         <h2 className="header-title">📅 Academic Schedule</h2>
-                        <p className="header-hint">Enter your class names in the corresponding time slots</p>
+                        <p className="header-hint">Select a category for each time slot</p>
                     </div>
                     <button onClick={onClose} className="close-x-btn">✕</button>
                 </div>
@@ -41,13 +56,18 @@ export default function Timetable({ timetable, onUpdate, onClose }) {
                                 <div className="grid-cell grid-cell--day-label">{day}</div>
                                 {TIMES.map(time => (
                                     <div key={time} className="grid-cell">
-                                        <input
-                                            type="text"
-                                            className="grid-input"
-                                            placeholder="..."
+                                        <select
+                                            className="grid-select"
                                             value={timetable?.timetable_grid?.[`${day}-${time}`] || ''}
                                             onChange={(e) => handleCellChange(day, time, e.target.value)}
-                                        />
+                                        >
+                                            <option value="">—</option>
+                                            {OPTIONS.map(option => (
+                                                <option key={option} value={option}>
+                                                    {option}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 ))}
                             </div>

@@ -644,7 +644,8 @@ body::before {
 .timetable-grid-wrapper {
   display: flex;
   flex-direction: column;
-  min-width: 1000px;
+  /* Increase min-width so the scrollbar kicks in instead of squishing columns */
+  min-width: 1240px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--bg-card);
@@ -653,7 +654,7 @@ body::before {
 .grid-header-row,
 .grid-day-row {
   display: grid;
-  grid-template-columns: 120px repeat(11, 1fr);
+  grid-template-columns: 140px repeat(11, 100px);
 }
 
 .grid-header-row {
@@ -803,4 +804,40 @@ body::before {
     grid-template-columns: 1fr;
     gap: 10px;
   }
+}
+
+/* Update this class in your index.css */
+.grid-select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  /* This changes the text to pure white */
+  font-size: 0.75rem;
+  text-align: center;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  text-align-last: center;
+  padding: 4px;
+  transition: var(--transition);
+  font-family: var(--font);
+}
+
+/* Remove the previous purple highlight or update it to white */
+.grid-select:not([value=""]) {
+  color: #ffffff;
+  /* Ensures selected text is also white */
+  font-weight: 600;
+}
+
+.grid-select:hover {
+  background: var(--bg-input);
+  border-radius: 4px;
+}
+
+.grid-select option {
+  background: var(--bg-card);
+  /* Keeps the dropdown menu dark */
+  color: var(--text-primary);
 }
